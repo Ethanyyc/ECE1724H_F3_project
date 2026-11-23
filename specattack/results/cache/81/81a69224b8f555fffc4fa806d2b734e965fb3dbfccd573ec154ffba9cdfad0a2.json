@@ -1,0 +1,23 @@
+{
+ "material": {
+  "model": "claude-opus-5-5",
+  "prompt": "You are writing a formal specification of a function, as a precondition and a postcondition in Python with the Z3 library.\n\nTask: In a badminton game, a side wins as soon as it has at least 21 points and at least 2 points more than the other side, or as soon as it reaches 30 points; no points are played after that. The array a holds two scores: a[0] to a[1], and a[2] to a[3]. Return how many of the two could be the final score of a finished game (with either side winning). You may assume all elements are non-negative.\n\nInputs: a: integer array with N = 4 elements, a[0] to a[3]\nThe function's result is called r (an integer).\n\nWrite two Python functions:\n- pre(a) returns a Z3 Boolean formula that holds exactly for the inputs the function may be called with.\n- post(a, r) returns a Z3 Boolean formula that holds exactly when r is a correct result for those inputs.\n\nRules for the code (code that breaks them is rejected):\n- The Z3 functions And, Or, Not, Implies, If, ForAll, Exists, Sum, Int and Ints are already available; do not import anything.\n- A variable used in ForAll or Exists must be created first, for example k = Int('k'), and then used as ForAll([k], ...) or Exists([k], ...). The inputs and r are already Z3 variables (the function's parameters); do not create them again.\n- Every condition that depends on the inputs (or on r) must be a Z3 formula: combine conditions with And(...), Or(...), Not(...) and Implies(...), and use If(c, x, y) for a value that depends on a condition. Python's and, or, not, if, x if c else y, in, min, max, sorted, all and any do not work on Z3 formulas.\n- Everything else may be ordinary Python: local variables, lists (also with append), loops, comprehensions, helper functions, and if statements or conditions that only test loop indices and constants.\n- Integers are mathematical integers (no overflow). On formulas, / and // are integer division and % is the remainder, each with a positive integer constant as the divisor. Avoid multiplying two variables: Z3 may then be unable to check the code.\n- Write only function definitions at the top level; do not use try or global, do not redefine the Z3 functions or N, and do not give Z3 variables names that start with in_ or out_.\n- Arrays: a[i] is element i. Every array has exactly N elements, at indices 0 to N - 1; N = 4 is predefined, so write N rather than 4. Arrays are Z3 arrays, not Python lists: use a[j] with j in range(N), not len(a), sum(a) or for x in a.\n- To talk about all or some indices, declare a variable with i = Int('i') and write ForAll([i], Implies(And(0 <= i, i < N), ...)) or Exists([i], And(0 <= i, i < N, ...)), or use a comprehension over range(N).\n\nExample for a different task (\"Return x if x is positive, otherwise 0.\"; input x: integer):\n\n```python\ndef pre(x):\n    return True\n\ndef post(x, r):\n    return And(r >= 0, r >= x, Or(r == 0, r == x))\n```\n\nReply with exactly one Python code block that defines pre and post.\n",
+  "max_tokens": 16000,
+  "thinking": "adaptive/medium",
+  "tag": "exp1:badminton_scores_possible:r2"
+ },
+ "result": {
+  "text": "A score x to y is a finished game won by x in exactly these cases:\n\n- **x = 21 and 0 \u2264 y \u2264 19.** The game ends the moment the side reaches 21 with a lead of at least 2.\n- **22 \u2264 x \u2264 30 and y = x \u2212 2.** The previous point was x\u22121 to x\u22122, a lead of only 1, so the game was still running. The winning point makes the lead 2.\n- **x = 30 and y = 29.** Reaching 30 ends the game whatever the lead.\n\nAll other scores are either unfinished or could only be reached by playing on after the game had already ended. A pair counts as a final score if either side won it this way. `r` is the number of the two pairs that count.\n\n```python\ndef pre(a):\n    return And([a[j] >= 0 for j in range(N)])\n\ndef win(x, y):\n    return Or(\n        And(x == 21, y >= 0, y <= 19),\n        And(x >= 22, x <= 30, y == x - 2),\n        And(x == 30, y == 29),\n    )\n\ndef valid(x, y):\n    return Or(win(x, y), win(y, x))\n\ndef post(a, r):\n    return r == If(valid(a[0], a[1]), 1, 0) + If(valid(a[2], a[3]), 1, 0)\n```",
+  "model": "claude-opus-5-5",
+  "model_version": "claude-opus-5-5",
+  "tokens_in": 1064,
+  "tokens_out": 728,
+  "tokens_thinking": 304,
+  "cost_usd": 0.018816,
+  "latency_ms": 8281.3,
+  "stop_reason": "end_turn",
+  "thinking": "adaptive/medium",
+  "cache_hit": false,
+  "cache_key": "81a69224b8f555fffc4fa806d2b734e965fb3dbfccd573ec154ffba9cdfad0a2"
+ }
+}

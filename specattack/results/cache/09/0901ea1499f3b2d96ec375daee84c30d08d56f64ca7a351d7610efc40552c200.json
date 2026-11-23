@@ -1,0 +1,23 @@
+{
+ "material": {
+  "model": "claude-haiku-5-5",
+  "prompt": "You are writing a formal specification of a function, as a precondition and a postcondition in Python with the Z3 library.\n\nTask: Return the index of the last element of the array a that is strictly smaller than each of its neighbours; the first and last elements have only one neighbour each. Return -1 if no element is.\n\nInputs: a: integer array with N = 4 elements, a[0] to a[3]\nThe function's result is called r (an integer).\n\nWrite two Python functions:\n- pre(a) returns a Z3 Boolean formula that holds exactly for the inputs the function may be called with.\n- post(a, r) returns a Z3 Boolean formula that holds exactly when r is a correct result for those inputs.\n\nRules for the code (code that breaks them is rejected):\n- The Z3 functions And, Or, Not, Implies, If, ForAll, Exists, Sum, Int and Ints are already available; do not import anything.\n- A variable used in ForAll or Exists must be created first, for example k = Int('k'), and then used as ForAll([k], ...) or Exists([k], ...). The inputs and r are already Z3 variables (the function's parameters); do not create them again.\n- Every condition that depends on the inputs (or on r) must be a Z3 formula: combine conditions with And(...), Or(...), Not(...) and Implies(...), and use If(c, x, y) for a value that depends on a condition. Python's and, or, not, if, x if c else y, in, min, max, sorted, all and any do not work on Z3 formulas.\n- Everything else may be ordinary Python: local variables, lists (also with append), loops, comprehensions, helper functions, and if statements or conditions that only test loop indices and constants.\n- Integers are mathematical integers (no overflow). On formulas, / and // are integer division and % is the remainder, each with a positive integer constant as the divisor. Avoid multiplying two variables: Z3 may then be unable to check the code.\n- Write only function definitions at the top level; do not use try or global, do not redefine the Z3 functions or N, and do not give Z3 variables names that start with in_ or out_.\n- Arrays: a[i] is element i. Every array has exactly N elements, at indices 0 to N - 1; N = 4 is predefined, so write N rather than 4. Arrays are Z3 arrays, not Python lists: use a[j] with j in range(N), not len(a), sum(a) or for x in a.\n- To talk about all or some indices, declare a variable with i = Int('i') and write ForAll([i], Implies(And(0 <= i, i < N), ...)) or Exists([i], And(0 <= i, i < N, ...)), or use a comprehension over range(N).\n\nExample for a different task (\"Return x if x is positive, otherwise 0.\"; input x: integer):\n\n```python\ndef pre(x):\n    return True\n\ndef post(x, r):\n    return And(r >= 0, r >= x, Or(r == 0, r == x))\n```\n\nReply with exactly one Python code block that defines pre and post.\n",
+  "max_tokens": 16000,
+  "thinking": "adaptive/medium",
+  "tag": "exp1:last_local_min_index:r0"
+ },
+ "result": {
+  "text": "```python\ndef is_min(a, j):\n    # Python-level j: element j is strictly smaller than each of its neighbours\n    conds = []\n    if j > 0:\n        conds.append(a[j] < a[j - 1])\n    if j < N - 1:\n        conds.append(a[j] < a[j + 1])\n    return And(*conds)\n\ndef pre(a):\n    return True\n\ndef post(a, r):\n    conds = []\n\n    # r == -1 exactly when no index is a local minimum\n    no_min = And([Not(is_min(a, j)) for j in range(N)])\n    conds.append(Implies(r == -1, no_min))\n\n    # r must be a valid index, or -1\n    conds.append(Or(r == -1, Or([r == j for j in range(N)])))\n\n    # If r == j, then j is a local minimum and no later index is one\n    for j in range(N):\n        later = [Not(is_min(a, k)) for k in range(j + 1, N)]\n        later_ok = And(*later) if later else True\n        conds.append(Implies(r == j, And(is_min(a, j), later_ok)))\n\n    return And(*conds)\n```",
+  "model": "claude-haiku-5-5",
+  "model_version": "claude-haiku-5-5",
+  "tokens_in": 995,
+  "tokens_out": 1338,
+  "tokens_thinking": 971,
+  "cost_usd": 0.000768,
+  "latency_ms": 6603.1,
+  "stop_reason": "end_turn",
+  "thinking": "adaptive/medium",
+  "cache_hit": false,
+  "cache_key": "0901ea1499f3b2d96ec375daee84c30d08d56f64ca7a351d7610efc40552c200"
+ }
+}

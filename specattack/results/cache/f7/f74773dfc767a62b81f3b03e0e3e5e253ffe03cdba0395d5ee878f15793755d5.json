@@ -1,0 +1,23 @@
+{
+ "material": {
+  "model": "claude-opus-5-5",
+  "prompt": "You are writing a formal specification of a function, as a precondition and a postcondition in Python with the Z3 library.\n\nTask: Return x / 4 rounded to the nearest integer; when x / 4 is exactly halfway between two integers, round away from zero (for example, 6 gives 2 and 5 gives 1).\n\nInputs: x: integer\nThe function's result is called r (an integer).\n\nWrite two Python functions:\n- pre(x) returns a Z3 Boolean formula that holds exactly for the inputs the function may be called with.\n- post(x, r) returns a Z3 Boolean formula that holds exactly when r is a correct result for those inputs.\n\nRules for the code (code that breaks them is rejected):\n- The Z3 functions And, Or, Not, Implies, If, ForAll, Exists, Sum, Int and Ints are already available; do not import anything.\n- A variable used in ForAll or Exists must be created first, for example k = Int('k'), and then used as ForAll([k], ...) or Exists([k], ...). The inputs and r are already Z3 variables (the function's parameters); do not create them again.\n- Every condition that depends on the inputs (or on r) must be a Z3 formula: combine conditions with And(...), Or(...), Not(...) and Implies(...), and use If(c, x, y) for a value that depends on a condition. Python's and, or, not, if, x if c else y, in, min, max, sorted, all and any do not work on Z3 formulas.\n- Everything else may be ordinary Python: local variables, lists (also with append), loops, comprehensions, helper functions, and if statements or conditions that only test loop indices and constants.\n- Integers are mathematical integers (no overflow). On formulas, / and // are integer division and % is the remainder, each with a positive integer constant as the divisor. Avoid multiplying two variables: Z3 may then be unable to check the code.\n- Write only function definitions at the top level; do not use try or global, do not redefine the Z3 functions or N, and do not give Z3 variables names that start with in_ or out_.\n\nExample for a different task (\"Return x if x is positive, otherwise 0.\"; input x: integer):\n\n```python\ndef pre(x):\n    return True\n\ndef post(x, r):\n    return And(r >= 0, r >= x, Or(r == 0, r == x))\n```\n\nReply with exactly one Python code block that defines pre and post.\n",
+  "max_tokens": 16000,
+  "thinking": "adaptive/medium",
+  "tag": "exp1:round_quarter_half_away:r2"
+ },
+ "result": {
+  "text": "For x \u2265 0 the result is floor((x + 2) / 4). For example, 6 gives 8 // 4 = 2, 5 gives 7 // 4 = 1, and 2 (that is, 0.5) gives 1. Written without division, this is `4r - 2 <= x < 4r + 2`.\n\nFor x < 0, rounding away from zero mirrors this: r = -floor((-x + 2) / 4). Substituting gives `4r - 2 < x <= 4r + 2`, so the tie goes to the lower value. For example, -2 gives -1.\n\n```python\ndef pre(x):\n    return True\n\ndef post(x, r):\n    return If(x >= 0,\n              And(4 * r - 2 <= x, x < 4 * r + 2),\n              And(4 * r - 2 < x, x <= 4 * r + 2))\n```",
+  "model": "claude-opus-5-5",
+  "model_version": "claude-opus-5-5",
+  "tokens_in": 791,
+  "tokens_out": 552,
+  "tokens_thinking": 274,
+  "cost_usd": 0.014204,
+  "latency_ms": 5388.5,
+  "stop_reason": "end_turn",
+  "thinking": "adaptive/medium",
+  "cache_hit": false,
+  "cache_key": "f74773dfc767a62b81f3b03e0e3e5e253ffe03cdba0395d5ee878f15793755d5"
+ }
+}

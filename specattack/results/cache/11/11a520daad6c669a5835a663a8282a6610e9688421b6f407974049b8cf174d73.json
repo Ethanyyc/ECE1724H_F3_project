@@ -1,0 +1,23 @@
+{
+ "material": {
+  "model": "claude-opus-5-5",
+  "prompt": "You are writing a formal specification of a function, as a precondition and a postcondition in Python with the Z3 library.\n\nTask: Return the second smallest of the four integers a, b, c and d, where equal values count separately (for example, 4, 1, 1, 9 gives 1).\n\nInputs: a: integer; b: integer; c: integer; d: integer\nThe function's result is called r (an integer).\n\nWrite two Python functions:\n- pre(a, b, c, d) returns a Z3 Boolean formula that holds exactly for the inputs the function may be called with.\n- post(a, b, c, d, r) returns a Z3 Boolean formula that holds exactly when r is a correct result for those inputs.\n\nRules for the code (code that breaks them is rejected):\n- The Z3 functions And, Or, Not, Implies, If, ForAll, Exists, Sum, Int and Ints are already available; do not import anything.\n- A variable used in ForAll or Exists must be created first, for example k = Int('k'), and then used as ForAll([k], ...) or Exists([k], ...). The inputs and r are already Z3 variables (the function's parameters); do not create them again.\n- Every condition that depends on the inputs (or on r) must be a Z3 formula: combine conditions with And(...), Or(...), Not(...) and Implies(...), and use If(c, x, y) for a value that depends on a condition. Python's and, or, not, if, x if c else y, in, min, max, sorted, all and any do not work on Z3 formulas.\n- Everything else may be ordinary Python: local variables, lists (also with append), loops, comprehensions, helper functions, and if statements or conditions that only test loop indices and constants.\n- Integers are mathematical integers (no overflow). On formulas, / and // are integer division and % is the remainder, each with a positive integer constant as the divisor. Avoid multiplying two variables: Z3 may then be unable to check the code.\n- Write only function definitions at the top level; do not use try or global, do not redefine the Z3 functions or N, and do not give Z3 variables names that start with in_ or out_.\n\nExample for a different task (\"Return x if x is positive, otherwise 0.\"; input x: integer):\n\n```python\ndef pre(x):\n    return True\n\ndef post(x, r):\n    return And(r >= 0, r >= x, Or(r == 0, r == x))\n```\n\nReply with exactly one Python code block that defines pre and post.\n",
+  "max_tokens": 16000,
+  "thinking": "adaptive/medium",
+  "tag": "exp1:median_of_four:r0"
+ },
+ "result": {
+  "text": "The result r is the second smallest value exactly when:\n\n- **At most one input is strictly less than r.** This gives r \u2264 the second smallest value.\n- **At least two inputs are less than or equal to r.** This gives r \u2265 the second smallest value.\n\nTogether these force r to equal the second smallest value, counting equal values separately. For 4, 1, 1, 9, r = 1 works: no input is below 1, and two inputs are \u2264 1. The formula also requires r to be one of the inputs. The two counting conditions already imply this, but stating it does no harm.\n\nThe precondition is just `True`, since any four integers are allowed.\n\n```python\ndef pre(a, b, c, d):\n    return True\n\ndef post(a, b, c, d, r):\n    vals = [a, b, c, d]\n    less = Sum([If(v < r, 1, 0) for v in vals])\n    leq = Sum([If(v <= r, 1, 0) for v in vals])\n    return And(Or([r == v for v in vals]), less <= 1, leq >= 2)\n```",
+  "model": "claude-opus-5-5",
+  "model_version": "claude-opus-5-5",
+  "tokens_in": 804,
+  "tokens_out": 583,
+  "tokens_thinking": 244,
+  "cost_usd": 0.014876,
+  "latency_ms": 5655.1,
+  "stop_reason": "end_turn",
+  "thinking": "adaptive/medium",
+  "cache_hit": false,
+  "cache_key": "11a520daad6c669a5835a663a8282a6610e9688421b6f407974049b8cf174d73"
+ }
+}

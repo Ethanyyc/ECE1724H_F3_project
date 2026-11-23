@@ -1,0 +1,4 @@
+Feedback type,Runs,Ended correct,Ended undetermined,Mean rounds to correct,Runs with a new defect,Invalid replies,Rounds that fell back to the example
+1: pass/fail,20,17 (85%),1,1.411764705882353,0 (0%),0,0
+2: one example,20,19 (95%),1,1.0,0 (0%),0,0
+3: wrong program,20,19 (95%),1,1.0,0 (0%),0,0

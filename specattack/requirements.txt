@@ -1,0 +1,6 @@
+# Python 3.10+. Versions used to develop and test the code:
+z3-solver>=4.12      # tested with 5.4.1
+anthropic>=2.8       # needs thinking={"type": "adaptive"} and output_config={"effort": ...}
+pandas>=2.0          # tested with 3.1.1
+matplotlib>=3.7      # tested with 3.11.2
+pytest>=8            # tested with 9.2.0

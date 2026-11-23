@@ -1,0 +1,23 @@
+{
+ "material": {
+  "model": "claude-haiku-5-5",
+  "prompt": "You are writing a formal specification of a function, as a precondition and a postcondition in Python with the Z3 library.\n\nTask: Return the largest integer that can be obtained by inserting one digit 5 into the decimal representation of x, at the start, at the end or between two digits (for example, 1234 gives 51234). You may assume 0 <= x <= 9999.\n\nInputs: x: integer\nThe function's result is called r (an integer).\n\nWrite two Python functions:\n- pre(x) returns a Z3 Boolean formula that holds exactly for the inputs the function may be called with.\n- post(x, r) returns a Z3 Boolean formula that holds exactly when r is a correct result for those inputs.\n\nRules for the code (code that breaks them is rejected):\n- The Z3 functions And, Or, Not, Implies, If, ForAll, Exists, Sum, Int and Ints are already available; do not import anything.\n- A variable used in ForAll or Exists must be created first, for example k = Int('k'), and then used as ForAll([k], ...) or Exists([k], ...). The inputs and r are already Z3 variables (the function's parameters); do not create them again.\n- Every condition that depends on the inputs (or on r) must be a Z3 formula: combine conditions with And(...), Or(...), Not(...) and Implies(...), and use If(c, x, y) for a value that depends on a condition. Python's and, or, not, if, x if c else y, in, min, max, sorted, all and any do not work on Z3 formulas.\n- Everything else may be ordinary Python: local variables, lists (also with append), loops, comprehensions, helper functions, and if statements or conditions that only test loop indices and constants.\n- Integers are mathematical integers (no overflow). On formulas, / and // are integer division and % is the remainder, each with a positive integer constant as the divisor. Avoid multiplying two variables: Z3 may then be unable to check the code.\n- Write only function definitions at the top level; do not use try or global, do not redefine the Z3 functions or N, and do not give Z3 variables names that start with in_ or out_.\n\nExample for a different task (\"Return x if x is positive, otherwise 0.\"; input x: integer):\n\n```python\ndef pre(x):\n    return True\n\ndef post(x, r):\n    return And(r >= 0, r >= x, Or(r == 0, r == x))\n```\n\nReply with exactly one Python code block that defines pre and post.\n",
+  "max_tokens": 16000,
+  "thinking": "adaptive/medium",
+  "tag": "exp1:max_after_inserting_5:r1"
+ },
+ "result": {
+  "text": "```python\ndef pre(x):\n    return And(x >= 0, x <= 9999)\n\ndef post(x, r):\n    # Candidate results: insert 5 so that t trailing digits of x stay after it.\n    # t = 0 inserts at the end, t = d (number of digits) inserts at the front.\n    # t = 0 and t = 1 are always valid (x = 0 has one digit).\n    # For t >= 2, the insertion is valid only if x has at least t digits.\n    options = []      # Or-terms: the value r equals a valid candidate\n    bounds = []       # And-terms: r is at least every valid candidate\n    for t in range(5):\n        c = (x // 10**t) * 10**(t + 1) + 5 * 10**t + x % 10**t\n        if t <= 1:\n            options.append(And(r == c))\n            bounds.append(r >= c)\n        else:\n            cond = x >= 10**(t - 1)\n            options.append(And(cond, r == c))\n            bounds.append(Implies(cond, r >= c))\n    return And(Or(*options), And(*bounds))\n```",
+  "model": "claude-haiku-5-5",
+  "model_version": "claude-haiku-5-5",
+  "tokens_in": 804,
+  "tokens_out": 2446,
+  "tokens_thinking": 2088,
+  "cost_usd": 0.001303,
+  "latency_ms": 12897.6,
+  "stop_reason": "end_turn",
+  "thinking": "adaptive/medium",
+  "cache_hit": false,
+  "cache_key": "e846ff89c923edd1056ebf9c144db867694c6ebe3592231a9a43302d44edc6d3"
+ }
+}

@@ -1,0 +1,23 @@
+{
+ "material": {
+  "model": "claude-haiku-5-5",
+  "prompt": "You wrote a formal specification of a function, as a precondition and a postcondition in Python with the Z3 library. It needs to be revised.\n\nTask: In a badminton game, a side wins as soon as it has at least 21 points and at least 2 points more than the other side, or as soon as it reaches 30 points; no points are played after that. The winner finished the game with p points. Return any number of points the loser could have finished with. You may assume 21 <= p <= 30.\n\nInputs: p: integer\nThe function's result is called r (an integer).\n\nYour current specification:\n\n```python\ndef pre(p):\n    return And(p >= 21, p <= 30)\n\ndef post(p, r):\n    return Or(\n        # Winner at 21 with a lead of at least 2: loser has 0..19 points\n        And(p == 21, r >= 0, r <= 19),\n        # Winner at 22..29: only possible as a deuce finish, final score p to p-2\n        And(p >= 22, p <= 29, r == p - 2),\n        # Winner at 30: loser has 0..29 points (29-29 then 30-29 is possible)\n        And(p == 30, r >= 0, r <= 29)\n    )\n```\n\nFeedback:\nYour spec is wrong.\n\nWrite a corrected specification: pre(p) returns a Z3 Boolean formula that holds exactly for the inputs the function may be called with, and post(p, r) returns a Z3 Boolean formula that holds exactly when r is a correct result for those inputs.\n\nRules for the code (code that breaks them is rejected):\n- The Z3 functions And, Or, Not, Implies, If, ForAll, Exists, Sum, Int and Ints are already available; do not import anything.\n- A variable used in ForAll or Exists must be created first, for example k = Int('k'), and then used as ForAll([k], ...) or Exists([k], ...). The inputs and r are already Z3 variables (the function's parameters); do not create them again.\n- Every condition that depends on the inputs (or on r) must be a Z3 formula: combine conditions with And(...), Or(...), Not(...) and Implies(...), and use If(c, x, y) for a value that depends on a condition. Python's and, or, not, if, x if c else y, in, min, max, sorted, all and any do not work on Z3 formulas.\n- Everything else may be ordinary Python: local variables, lists (also with append), loops, comprehensions, helper functions, and if statements or conditions that only test loop indices and constants.\n- Integers are mathematical integers (no overflow). On formulas, / and // are integer division and % is the remainder, each with a positive integer constant as the divisor. Avoid multiplying two variables: Z3 may then be unable to check the code.\n- Write only function definitions at the top level; do not use try or global, do not redefine the Z3 functions or N, and do not give Z3 variables names that start with in_ or out_.\n\nReply with exactly one Python code block that defines pre and post.\n",
+  "max_tokens": 16000,
+  "thinking": "adaptive/medium",
+  "tag": "exp2:badminton_losing_score-r2:t1:k3"
+ },
+ "result": {
+  "text": "The original post was wrong for p = 30. If the winner reached 30, the previous state was 29 to r. Had r been 27 or lower, the winner would already have won at 29 with a lead of at least 2, so the game would have ended earlier. The loser's score must therefore be 28 or 29, not 0 to 29.\n\n```python\ndef pre(p):\n    return And(p >= 21, p <= 30)\n\ndef post(p, r):\n    return Or(\n        # Winner at 21: the game ended with a lead of at least 2, so loser has 0..19\n        And(p == 21, r >= 0, r <= 19),\n        # Winner at 22..29: the game was won by a 2-point lead, so loser has exactly p-2\n        And(p >= 22, p <= 29, r == p - 2),\n        # Winner at 30: loser has 28 or 29 (with 27 or fewer, the game would have ended at 29)\n        And(p == 30, r >= 28, r <= 29)\n    )\n```",
+  "model": "claude-haiku-5-5",
+  "model_version": "claude-haiku-5-5",
+  "tokens_in": 976,
+  "tokens_out": 1633,
+  "tokens_thinking": 1312,
+  "cost_usd": 0.000914,
+  "latency_ms": 8473.6,
+  "stop_reason": "end_turn",
+  "thinking": "adaptive/medium",
+  "cache_hit": false,
+  "cache_key": "03e86d3d63c2ea823bac6a0eac28969da4203d2d45fa2944dc49998b0df916ef"
+ }
+}

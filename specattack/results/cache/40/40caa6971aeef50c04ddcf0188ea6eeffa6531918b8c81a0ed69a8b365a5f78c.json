@@ -1,0 +1,23 @@
+{
+ "material": {
+  "model": "claude-opus-5-5",
+  "prompt": "You are writing a formal specification of a function, as a precondition and a postcondition in Python with the Z3 library.\n\nTask: In a table tennis game, player A has p points and player B has q points. A player wins the game as soon as they have at least 11 points and at least 2 points more than the other player, and no points are played after that. Return 1 if A has won, 2 if B has won, and 0 if the game is not over. You may assume p and q are possible scores of such a game.\n\nInputs: p: integer; q: integer\nThe function's result is called r (an integer).\n\nWrite two Python functions:\n- pre(p, q) returns a Z3 Boolean formula that holds exactly for the inputs the function may be called with.\n- post(p, q, r) returns a Z3 Boolean formula that holds exactly when r is a correct result for those inputs.\n\nRules for the code (code that breaks them is rejected):\n- The Z3 functions And, Or, Not, Implies, If, ForAll, Exists, Sum, Int and Ints are already available; do not import anything.\n- A variable used in ForAll or Exists must be created first, for example k = Int('k'), and then used as ForAll([k], ...) or Exists([k], ...). The inputs and r are already Z3 variables (the function's parameters); do not create them again.\n- Every condition that depends on the inputs (or on r) must be a Z3 formula: combine conditions with And(...), Or(...), Not(...) and Implies(...), and use If(c, x, y) for a value that depends on a condition. Python's and, or, not, if, x if c else y, in, min, max, sorted, all and any do not work on Z3 formulas.\n- Everything else may be ordinary Python: local variables, lists (also with append), loops, comprehensions, helper functions, and if statements or conditions that only test loop indices and constants.\n- Integers are mathematical integers (no overflow). On formulas, / and // are integer division and % is the remainder, each with a positive integer constant as the divisor. Avoid multiplying two variables: Z3 may then be unable to check the code.\n- Write only function definitions at the top level; do not use try or global, do not redefine the Z3 functions or N, and do not give Z3 variables names that start with in_ or out_.\n\nExample for a different task (\"Return x if x is positive, otherwise 0.\"; input x: integer):\n\n```python\ndef pre(x):\n    return True\n\ndef post(x, r):\n    return And(r >= 0, r >= x, Or(r == 0, r == x))\n```\n\nReply with exactly one Python code block that defines pre and post.\n",
+  "max_tokens": 16000,
+  "thinking": "adaptive/medium",
+  "tag": "exp1:table_tennis_game:r1"
+ },
+ "result": {
+  "text": "A score pair is reachable in one of two ways:\n\n- **The game is still running.** Neither player has at least 11 points with a lead of at least 2. Every such pair of non-negative scores can be reached, because any path to it passes only through other running states.\n- **The game has just ended.** No points are played after a win, so the winner's last point came from a running state.\n  - Say A wins at (p, q), meaning p \u2265 11 and p \u2212 q \u2265 2.\n  - The previous state (p \u2212 1, q) must not already be a win for A. That requires p \u2212 1 < 11 or p \u2212 1 \u2212 q < 2, which means p == 11 or p \u2212 q == 2.\n  - For example, (11, 5) and (13, 11) are valid end scores, but (12, 5) is not.\n  - The same rule applies to B with the scores swapped.\n\nThe postcondition requires r to be 1 if A has won, 2 if B has won, and 0 otherwise.\n\n```python\ndef pre(p, q):\n    a_won = And(p >= 11, p - q >= 2)\n    b_won = And(q >= 11, q - p >= 2)\n    a_valid = And(a_won, Or(p == 11, p - q == 2))\n    b_valid = And(b_won, Or(q == 11, q - p == 2))\n    not_over = And(Not(a_won), Not(b_won))\n    return And(p >= 0, q >= 0, Or(not_over, a_valid, b_valid))\n\ndef post(p, q, r):\n    a_won = And(p >= 11, p - q >= 2)\n    b_won = And(q >= 11, q - p >= 2)\n    return r == If(a_won, 1, If(b_won, 2, 0))\n```",
+  "model": "claude-opus-5-5",
+  "model_version": "claude-opus-5-5",
+  "tokens_in": 843,
+  "tokens_out": 1128,
+  "tokens_thinking": 578,
+  "cost_usd": 0.025932,
+  "latency_ms": 10893.0,
+  "stop_reason": "end_turn",
+  "thinking": "adaptive/medium",
+  "cache_hit": false,
+  "cache_key": "40caa6971aeef50c04ddcf0188ea6eeffa6531918b8c81a0ed69a8b365a5f78c"
+ }
+}

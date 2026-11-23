@@ -1,0 +1,23 @@
+{
+ "material": {
+  "model": "claude-opus-5-5",
+  "prompt": "You are writing a formal specification of a function, as a precondition and a postcondition in Python with the Z3 library.\n\nTask: Return x / 2 rounded to the nearest integer; when x / 2 is exactly halfway between two integers, round to the even one (for example, 5 gives 2, 7 gives 4, and -5 gives -2).\n\nInputs: x: integer\nThe function's result is called r (an integer).\n\nWrite two Python functions:\n- pre(x) returns a Z3 Boolean formula that holds exactly for the inputs the function may be called with.\n- post(x, r) returns a Z3 Boolean formula that holds exactly when r is a correct result for those inputs.\n\nRules for the code (code that breaks them is rejected):\n- The Z3 functions And, Or, Not, Implies, If, ForAll, Exists, Sum, Int and Ints are already available; do not import anything.\n- A variable used in ForAll or Exists must be created first, for example k = Int('k'), and then used as ForAll([k], ...) or Exists([k], ...). The inputs and r are already Z3 variables (the function's parameters); do not create them again.\n- Every condition that depends on the inputs (or on r) must be a Z3 formula: combine conditions with And(...), Or(...), Not(...) and Implies(...), and use If(c, x, y) for a value that depends on a condition. Python's and, or, not, if, x if c else y, in, min, max, sorted, all and any do not work on Z3 formulas.\n- Everything else may be ordinary Python: local variables, lists (also with append), loops, comprehensions, helper functions, and if statements or conditions that only test loop indices and constants.\n- Integers are mathematical integers (no overflow). On formulas, / and // are integer division and % is the remainder, each with a positive integer constant as the divisor. Avoid multiplying two variables: Z3 may then be unable to check the code.\n- Write only function definitions at the top level; do not use try or global, do not redefine the Z3 functions or N, and do not give Z3 variables names that start with in_ or out_.\n\nExample for a different task (\"Return x if x is positive, otherwise 0.\"; input x: integer):\n\n```python\ndef pre(x):\n    return True\n\ndef post(x, r):\n    return And(r >= 0, r >= x, Or(r == 0, r == x))\n```\n\nReply with exactly one Python code block that defines pre and post.\n",
+  "max_tokens": 16000,
+  "thinking": "adaptive/medium",
+  "tag": "exp1:round_half_even:r1"
+ },
+ "result": {
+  "text": "For even `x`, the result is exactly half, so `2*r == x`. For odd `x`, `x / 2` lies halfway between two integers. Those are the `r` with `2*r - x` equal to `1` or `-1`, and the rule picks the even one.\n\nIn Z3, `r % 2` with a positive divisor is never negative, so `r % 2 == 0` also correctly tests evenness for negative `r`. For the stated examples: `x = 5` gives `r = 2`, `x = 7` gives `r = 4`, and `x = -5` gives `r = -2`.\n\n```python\ndef pre(x):\n    return True\n\ndef post(x, r):\n    d = 2 * r - x\n    return Or(d == 0, And(Or(d == 1, d == -1), r % 2 == 0))\n```",
+  "model": "claude-opus-5-5",
+  "model_version": "claude-opus-5-5",
+  "tokens_in": 799,
+  "tokens_out": 566,
+  "tokens_thinking": 307,
+  "cost_usd": 0.014516,
+  "latency_ms": 5308.6,
+  "stop_reason": "end_turn",
+  "thinking": "adaptive/medium",
+  "cache_hit": false,
+  "cache_key": "5d8be57bba21242efa6040c2801467930b8359f8adb7a8756d00725273f524f2"
+ }
+}

@@ -1,0 +1,23 @@
+{
+ "material": {
+  "model": "claude-opus-5-5",
+  "prompt": "You are writing a formal specification of a function, as a precondition and a postcondition in Python with the Z3 library.\n\nTask: Return the index of a largest element of the array a. If several elements are largest, return the index closest to the middle of the array, which lies between indices 1 and 2; if two such indices are equally close, return the smaller one.\n\nInputs: a: integer array with N = 4 elements, a[0] to a[3]\nThe function's result is called r (an integer).\n\nWrite two Python functions:\n- pre(a) returns a Z3 Boolean formula that holds exactly for the inputs the function may be called with.\n- post(a, r) returns a Z3 Boolean formula that holds exactly when r is a correct result for those inputs.\n\nRules for the code (code that breaks them is rejected):\n- The Z3 functions And, Or, Not, Implies, If, ForAll, Exists, Sum, Int and Ints are already available; do not import anything.\n- A variable used in ForAll or Exists must be created first, for example k = Int('k'), and then used as ForAll([k], ...) or Exists([k], ...). The inputs and r are already Z3 variables (the function's parameters); do not create them again.\n- Every condition that depends on the inputs (or on r) must be a Z3 formula: combine conditions with And(...), Or(...), Not(...) and Implies(...), and use If(c, x, y) for a value that depends on a condition. Python's and, or, not, if, x if c else y, in, min, max, sorted, all and any do not work on Z3 formulas.\n- Everything else may be ordinary Python: local variables, lists (also with append), loops, comprehensions, helper functions, and if statements or conditions that only test loop indices and constants.\n- Integers are mathematical integers (no overflow). On formulas, / and // are integer division and % is the remainder, each with a positive integer constant as the divisor. Avoid multiplying two variables: Z3 may then be unable to check the code.\n- Write only function definitions at the top level; do not use try or global, do not redefine the Z3 functions or N, and do not give Z3 variables names that start with in_ or out_.\n- Arrays: a[i] is element i. Every array has exactly N elements, at indices 0 to N - 1; N = 4 is predefined, so write N rather than 4. Arrays are Z3 arrays, not Python lists: use a[j] with j in range(N), not len(a), sum(a) or for x in a.\n- To talk about all or some indices, declare a variable with i = Int('i') and write ForAll([i], Implies(And(0 <= i, i < N), ...)) or Exists([i], And(0 <= i, i < N, ...)), or use a comprehension over range(N).\n\nExample for a different task (\"Return x if x is positive, otherwise 0.\"; input x: integer):\n\n```python\ndef pre(x):\n    return True\n\ndef post(x, r):\n    return And(r >= 0, r >= x, Or(r == 0, r == x))\n```\n\nReply with exactly one Python code block that defines pre and post.\n",
+  "max_tokens": 16000,
+  "thinking": "adaptive/medium",
+  "tag": "exp1:index_of_max_nearest_middle:r2"
+ },
+ "result": {
+  "text": "The middle of the array lies between indices 1 and 2. I measure each index's distance from it with the integer value `|2i - (N - 1)|`, which avoids fractions. For N = 4 the distances are 3, 1, 1, 3 for indices 0 to 3. Indices 1 and 2 tie, and the smaller index wins ties, so the preference order is 1, 2, 0, 3.\n\nThe postcondition holds when r is one of the indices and:\n1. `a[r]` is at least every element, so it is a largest element.\n2. Every other index j holding the same largest value is either farther from the middle, or equally close and larger than r.\n\n```python\ndef pre(a):\n    return True\n\ndef post(a, r):\n    def dist(i):\n        d = 2 * i - (N - 1)\n        return d if d >= 0 else -d\n\n    options = []\n    for i in range(N):\n        conds = [r == i]\n        for j in range(N):\n            conds.append(a[i] >= a[j])\n        for j in range(N):\n            if j != i:\n                better = dist(j) < dist(i) or (dist(j) == dist(i) and j < i)\n                if better:\n                    conds.append(a[j] != a[i])\n        options.append(And(conds))\n    return Or(options)\n```",
+  "model": "claude-opus-5-5",
+  "model_version": "claude-opus-5-5",
+  "tokens_in": 1006,
+  "tokens_out": 663,
+  "tokens_thinking": 255,
+  "cost_usd": 0.017284,
+  "latency_ms": 6769.9,
+  "stop_reason": "end_turn",
+  "thinking": "adaptive/medium",
+  "cache_hit": false,
+  "cache_key": "0f5b504608bc608b899c678ca995ef26b60893032619455d9221209ae2fb97fe"
+ }
+}

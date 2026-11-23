@@ -1,0 +1,23 @@
+{
+ "material": {
+  "model": "claude-haiku-5-5",
+  "prompt": "You are writing a formal specification of a function, as a precondition and a postcondition in Python with the Z3 library.\n\nTask: Return the length of the longest stretch of consecutive positions of the array a that all hold the same value.\n\nInputs: a: integer array with N = 4 elements, a[0] to a[3]\nThe function's result is called r (an integer).\n\nWrite two Python functions:\n- pre(a) returns a Z3 Boolean formula that holds exactly for the inputs the function may be called with.\n- post(a, r) returns a Z3 Boolean formula that holds exactly when r is a correct result for those inputs.\n\nRules for the code (code that breaks them is rejected):\n- The Z3 functions And, Or, Not, Implies, If, ForAll, Exists, Sum, Int and Ints are already available; do not import anything.\n- A variable used in ForAll or Exists must be created first, for example k = Int('k'), and then used as ForAll([k], ...) or Exists([k], ...). The inputs and r are already Z3 variables (the function's parameters); do not create them again.\n- Every condition that depends on the inputs (or on r) must be a Z3 formula: combine conditions with And(...), Or(...), Not(...) and Implies(...), and use If(c, x, y) for a value that depends on a condition. Python's and, or, not, if, x if c else y, in, min, max, sorted, all and any do not work on Z3 formulas.\n- Everything else may be ordinary Python: local variables, lists (also with append), loops, comprehensions, helper functions, and if statements or conditions that only test loop indices and constants.\n- Integers are mathematical integers (no overflow). On formulas, / and // are integer division and % is the remainder, each with a positive integer constant as the divisor. Avoid multiplying two variables: Z3 may then be unable to check the code.\n- Write only function definitions at the top level; do not use try or global, do not redefine the Z3 functions or N, and do not give Z3 variables names that start with in_ or out_.\n- Arrays: a[i] is element i. Every array has exactly N elements, at indices 0 to N - 1; N = 4 is predefined, so write N rather than 4. Arrays are Z3 arrays, not Python lists: use a[j] with j in range(N), not len(a), sum(a) or for x in a.\n- To talk about all or some indices, declare a variable with i = Int('i') and write ForAll([i], Implies(And(0 <= i, i < N), ...)) or Exists([i], And(0 <= i, i < N, ...)), or use a comprehension over range(N).\n\nExample for a different task (\"Return x if x is positive, otherwise 0.\"; input x: integer):\n\n```python\ndef pre(x):\n    return True\n\ndef post(x, r):\n    return And(r >= 0, r >= x, Or(r == 0, r == x))\n```\n\nReply with exactly one Python code block that defines pre and post.\n",
+  "max_tokens": 16000,
+  "thinking": "adaptive/medium",
+  "tag": "exp1:longest_equal_run:r1"
+ },
+ "result": {
+  "text": "```python\ndef pre(a):\n    return True\n\ndef post(a, r):\n    # Every pair (s, t) with s <= t gives a window a[s..t].\n    pairs = [(s, t) for s in range(N) for t in range(s, N)]\n\n    def all_equal(s, t):\n        # The window a[s..t] holds one value.\n        return And([a[k] == a[s] for k in range(s, t + 1)])\n\n    # r is the length of some window whose elements are all equal.\n    attained = Or([And(all_equal(s, t), r == t - s + 1) for (s, t) in pairs])\n\n    # No window of uniform values is longer than r.\n    maximal = And([Implies(all_equal(s, t), r >= t - s + 1) for (s, t) in pairs])\n\n    return And(r >= 1, r <= N, attained, maximal)\n```",
+  "model": "claude-haiku-5-5",
+  "model_version": "claude-haiku-5-5",
+  "tokens_in": 971,
+  "tokens_out": 1014,
+  "tokens_thinking": 739,
+  "cost_usd": 0.000604,
+  "latency_ms": 5279.0,
+  "stop_reason": "end_turn",
+  "thinking": "adaptive/medium",
+  "cache_hit": false,
+  "cache_key": "465c52fe1bc4a42c65cdd3e6e8ecb5ae6d48f3f3e0304c59fcd6035fac4f9dbe"
+ }
+}

@@ -1,0 +1,23 @@
+{
+ "material": {
+  "model": "claude-haiku-5-5",
+  "prompt": "You wrote a formal specification of a function, as a precondition and a postcondition in Python with the Z3 library. It needs to be revised.\n\nTask: In a badminton game, a side wins as soon as it has at least 21 points and at least 2 points more than the other side, or as soon as it reaches 30 points; no points are played after that. The winner finished the game with p points. Return any number of points the loser could have finished with. You may assume 21 <= p <= 30.\n\nInputs: p: integer\nThe function's result is called r (an integer).\n\nYour current specification:\n\n```python\ndef pre(p):\n    return And(p >= 21, p <= 30)\n\ndef post(p, r):\n    # Winner has p points (21 <= p <= 30); r is any valid loser score.\n    # p == 21: winner won 21-r with lead >= 2, so 0 <= r <= 19.\n    # 22 <= p <= 29: game ended at p with lead exactly 2, so r == p - 2.\n    # p == 30: the game ended at 30 regardless of margin, so 0 <= r <= 29.\n    return Or(\n        And(p == 21, r >= 0, r <= 19),\n        And(p >= 22, p <= 29, r == p - 2),\n        And(p == 30, r >= 0, r <= 29),\n    )\n```\n\nFeedback:\nYour spec accepts this wrong implementation:\n```python\ndef prog(p):\n    return If(Or(p == 21, p == 30), 0, p - 2)\n```\n\nWrite a corrected specification: pre(p) returns a Z3 Boolean formula that holds exactly for the inputs the function may be called with, and post(p, r) returns a Z3 Boolean formula that holds exactly when r is a correct result for those inputs.\n\nRules for the code (code that breaks them is rejected):\n- The Z3 functions And, Or, Not, Implies, If, ForAll, Exists, Sum, Int and Ints are already available; do not import anything.\n- A variable used in ForAll or Exists must be created first, for example k = Int('k'), and then used as ForAll([k], ...) or Exists([k], ...). The inputs and r are already Z3 variables (the function's parameters); do not create them again.\n- Every condition that depends on the inputs (or on r) must be a Z3 formula: combine conditions with And(...), Or(...), Not(...) and Implies(...), and use If(c, x, y) for a value that depends on a condition. Python's and, or, not, if, x if c else y, in, min, max, sorted, all and any do not work on Z3 formulas.\n- Everything else may be ordinary Python: local variables, lists (also with append), loops, comprehensions, helper functions, and if statements or conditions that only test loop indices and constants.\n- Integers are mathematical integers (no overflow). On formulas, / and // are integer division and % is the remainder, each with a positive integer constant as the divisor. Avoid multiplying two variables: Z3 may then be unable to check the code.\n- Write only function definitions at the top level; do not use try or global, do not redefine the Z3 functions or N, and do not give Z3 variables names that start with in_ or out_.\n\nReply with exactly one Python code block that defines pre and post.\n",
+  "max_tokens": 16000,
+  "thinking": "adaptive/medium",
+  "tag": "exp2:badminton_losing_score-r0:t3:k1"
+ },
+ "result": {
+  "text": "The original spec allowed `r` in 0..29 when `p == 30`. That is wrong. If the winner reached 30, the previous score was 29 to the loser's `r`, and that state must not have ended the game. At 29, the game ends if the loser has 27 or fewer points, since the winner would lead by at least 2 with at least 21 points. So the loser must have 28 or 29.\n\n```python\ndef pre(p):\n    return And(p >= 21, p <= 30)\n\ndef post(p, r):\n    # The winner's last point was scored from (p-1, r), and that state must not\n    # have already ended the game. The loser's score r must be >= 0.\n    # p == 21: the winner reached 21 from 20 (not terminal), so the margin at\n    #          21 must be at least 2: 0 <= r <= 19.\n    # 22 <= p <= 29: the state (p-1, r) must be non-terminal, so p-1-r < 2,\n    #          and the final state (p, r) must be terminal, so p-r >= 2.\n    #          Hence r == p - 2.\n    # p == 30: the state (29, r) must be non-terminal, so r >= 28 (a lead of 2 or\n    #          more at 29 would already have ended the game). The game ends at 30\n    #          regardless of margin, so 28 <= r <= 29.\n    return Or(\n        And(p == 21, r >= 0, r <= 19),\n        And(p >= 22, p <= 29, r == p - 2),\n        And(p == 30, r >= 28, r <= 29),\n    )\n```",
+  "model": "claude-haiku-5-5",
+  "model_version": "claude-haiku-5-5",
+  "tokens_in": 1062,
+  "tokens_out": 2185,
+  "tokens_thinking": 1677,
+  "cost_usd": 0.001199,
+  "latency_ms": 10637.1,
+  "stop_reason": "end_turn",
+  "thinking": "adaptive/medium",
+  "cache_hit": false,
+  "cache_key": "fcce20921885721d28748e9f8195f3d39ddbf2c194308ab382f55764ae2dd3c3"
+ }
+}

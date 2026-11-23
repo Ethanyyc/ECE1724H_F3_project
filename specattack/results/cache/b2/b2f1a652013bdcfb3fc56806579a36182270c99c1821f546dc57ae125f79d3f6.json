@@ -1,0 +1,23 @@
+{
+ "material": {
+  "model": "claude-haiku-5-5",
+  "prompt": "You are writing a formal specification of a function, as a precondition and a postcondition in Python with the Z3 library.\n\nTask: Squares of a chessboard are given as (row, column) with rows and columns from 0 to 7. Return the smallest number of moves a bishop needs to go from square (r1, c1) to square (r2, c2), or -1 if it cannot get there. You may assume all four numbers are between 0 and 7.\n\nInputs: r1: integer; c1: integer; r2: integer; c2: integer\nThe function's result is called r (an integer).\n\nWrite two Python functions:\n- pre(r1, c1, r2, c2) returns a Z3 Boolean formula that holds exactly for the inputs the function may be called with.\n- post(r1, c1, r2, c2, r) returns a Z3 Boolean formula that holds exactly when r is a correct result for those inputs.\n\nRules for the code (code that breaks them is rejected):\n- The Z3 functions And, Or, Not, Implies, If, ForAll, Exists, Sum, Int and Ints are already available; do not import anything.\n- A variable used in ForAll or Exists must be created first, for example k = Int('k'), and then used as ForAll([k], ...) or Exists([k], ...). The inputs and r are already Z3 variables (the function's parameters); do not create them again.\n- Every condition that depends on the inputs (or on r) must be a Z3 formula: combine conditions with And(...), Or(...), Not(...) and Implies(...), and use If(c, x, y) for a value that depends on a condition. Python's and, or, not, if, x if c else y, in, min, max, sorted, all and any do not work on Z3 formulas.\n- Everything else may be ordinary Python: local variables, lists (also with append), loops, comprehensions, helper functions, and if statements or conditions that only test loop indices and constants.\n- Integers are mathematical integers (no overflow). On formulas, / and // are integer division and % is the remainder, each with a positive integer constant as the divisor. Avoid multiplying two variables: Z3 may then be unable to check the code.\n- Write only function definitions at the top level; do not use try or global, do not redefine the Z3 functions or N, and do not give Z3 variables names that start with in_ or out_.\n\nExample for a different task (\"Return x if x is positive, otherwise 0.\"; input x: integer):\n\n```python\ndef pre(x):\n    return True\n\ndef post(x, r):\n    return And(r >= 0, r >= x, Or(r == 0, r == x))\n```\n\nReply with exactly one Python code block that defines pre and post.\n",
+  "max_tokens": 16000,
+  "thinking": "adaptive/medium",
+  "tag": "exp1:bishop_moves:r0"
+ },
+ "result": {
+  "text": "```python\ndef pre(r1, c1, r2, c2):\n    return And(\n        r1 >= 0, r1 <= 7,\n        c1 >= 0, c1 <= 7,\n        r2 >= 0, r2 <= 7,\n        c2 >= 0, c2 <= 7,\n    )\n\ndef post(r1, c1, r2, c2, r):\n    same = And(r1 == r2, c1 == c2)\n    same_color = (r1 + c1 + r2 + c2) % 2 == 0\n    diff_color = Not(same_color)\n    on_diag = Or(r1 - r2 == c1 - c2, r1 - r2 == c2 - c1)\n    return And(\n        # Same square: zero moves\n        Implies(same, r == 0),\n        # Different colour: unreachable\n        Implies(And(Not(same), diff_color), r == -1),\n        # Same colour, on a common diagonal (not the same square): one move\n        Implies(And(Not(same), same_color, on_diag), r == 1),\n        # Same colour, not on a common diagonal: two moves suffice on 8x8\n        Implies(And(Not(same), same_color, Not(on_diag)), r == 2),\n    )\n```",
+  "model": "claude-haiku-5-5",
+  "model_version": "claude-haiku-5-5",
+  "tokens_in": 865,
+  "tokens_out": 1064,
+  "tokens_thinking": 664,
+  "cost_usd": 0.000619,
+  "latency_ms": 4918.1,
+  "stop_reason": "end_turn",
+  "thinking": "adaptive/medium",
+  "cache_hit": false,
+  "cache_key": "b2f1a652013bdcfb3fc56806579a36182270c99c1821f546dc57ae125f79d3f6"
+ }
+}

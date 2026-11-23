@@ -1,0 +1,23 @@
+{
+ "material": {
+  "model": "claude-haiku-5-5",
+  "prompt": "You are writing a formal specification of a function, as a precondition and a postcondition in Python with the Z3 library.\n\nTask: A child puts 1, 2 or 3 coins into an empty jar each day, starting on day 1, and stops as soon as the jar holds at least 10 coins or after the 5th day, whichever comes first. Return 1 if the child could have stopped after d days with t coins in the jar, and 0 otherwise.\n\nInputs: t: integer; d: integer\nThe function's result is called r (an integer).\n\nWrite two Python functions:\n- pre(t, d) returns a Z3 Boolean formula that holds exactly for the inputs the function may be called with.\n- post(t, d, r) returns a Z3 Boolean formula that holds exactly when r is a correct result for those inputs.\n\nRules for the code (code that breaks them is rejected):\n- The Z3 functions And, Or, Not, Implies, If, ForAll, Exists, Sum, Int and Ints are already available; do not import anything.\n- A variable used in ForAll or Exists must be created first, for example k = Int('k'), and then used as ForAll([k], ...) or Exists([k], ...). The inputs and r are already Z3 variables (the function's parameters); do not create them again.\n- Every condition that depends on the inputs (or on r) must be a Z3 formula: combine conditions with And(...), Or(...), Not(...) and Implies(...), and use If(c, x, y) for a value that depends on a condition. Python's and, or, not, if, x if c else y, in, min, max, sorted, all and any do not work on Z3 formulas.\n- Everything else may be ordinary Python: local variables, lists (also with append), loops, comprehensions, helper functions, and if statements or conditions that only test loop indices and constants.\n- Integers are mathematical integers (no overflow). On formulas, / and // are integer division and % is the remainder, each with a positive integer constant as the divisor. Avoid multiplying two variables: Z3 may then be unable to check the code.\n- Write only function definitions at the top level; do not use try or global, do not redefine the Z3 functions or N, and do not give Z3 variables names that start with in_ or out_.\n\nExample for a different task (\"Return x if x is positive, otherwise 0.\"; input x: integer):\n\n```python\ndef pre(x):\n    return True\n\ndef post(x, r):\n    return And(r >= 0, r >= x, Or(r == 0, r == x))\n```\n\nReply with exactly one Python code block that defines pre and post.\n",
+  "max_tokens": 16000,
+  "thinking": "adaptive/medium",
+  "tag": "exp1:coin_jar_final:r2"
+ },
+ "result": {
+  "text": "```python\ndef pre(t, d):\n    return And(d >= 1, d <= 5)\n\ndef post(t, d, r):\n    # s is the coin total after d-1 days (the child had not stopped yet).\n    # After d-1 days with coins 1..3 each, d-1 <= s <= 3*(d-1).\n    # Not having stopped requires s <= 9, since partial sums are increasing.\n    # Day d adds 1, 2 or 3 coins to reach t.\n    s = Int('s')\n    reachable = Exists([s], And(s >= d - 1,\n                                s <= 3 * (d - 1),\n                                s <= 9,\n                                t - s >= 1,\n                                t - s <= 3))\n    # Stopping on day d requires at least 10 coins or d being the 5th day.\n    stop_here = Or(t >= 10, d == 5)\n    return r == If(And(reachable, stop_here), 1, 0)\n```",
+  "model": "claude-haiku-5-5",
+  "model_version": "claude-haiku-5-5",
+  "tokens_in": 838,
+  "tokens_out": 1911,
+  "tokens_thinking": 1604,
+  "cost_usd": 0.001039,
+  "latency_ms": 9221.9,
+  "stop_reason": "end_turn",
+  "thinking": "adaptive/medium",
+  "cache_hit": false,
+  "cache_key": "ddbd14193de35bc14f361f9b5674e92d0fb34a56be01be03b43aee95456314a9"
+ }
+}

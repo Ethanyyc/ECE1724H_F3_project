@@ -1,0 +1,13 @@
+# T4. Attacker on too-weak first specs (RQ2)
+
+| Group | Attacked | Confirmed wrong program | Mean attempts (successes) | Program size: median (range) | Source size: median (range) | No passing program exists | Realizability unknown | Rejected: did not follow the format | Rejected: did not pass the spec | Rejected: was actually correct | Rejected: Z3 undetermined |
+|---|---|---|---|---|---|---|---|---|---|---|---|
+| Group 1 | 3 | 3 (100%) | 1 | 16 (16-16) | 53 (53-53) | 0 | 0 | 0 | 0 | 0 | 0 |
+| Group 2 | 1 | 1 (100%) | 1 | 63 (63-63) | 89 (89-89) | 0 | 0 | 0 | 0 | 0 | 0 |
+| Group 3 | 2 | 2 (100%) | 1 | 8.5 (7-10) | 18 (15-21) | 0 | 0 | 0 | 0 | 0 | 0 |
+| Group 4 | 14 | 14 (100%) | 1 | 20.5 (17-23) | 64.5 (47-77) | 0 | 0 | 0 | 0 | 0 | 0 |
+| All | 20 | 20 (100%) | 1 | 18.5 (7-63) | 60.5 (15-89) | 0 | 0 | 0 | 0 | 0 | 0 |
+| Integer tasks | 19 | 19 (100%) | 1 | 18 (7-23) | 59 (15-77) | 0 | 0 | 0 | 0 | 0 | 0 |
+| Array tasks | 1 | 1 (100%) | 1 | 63 (63-63) | 89 (89-89) | 0 | 0 | 0 | 0 | 0 | 0 |
+
+Too-weak first specs in Exp 1: 20; attacked: 20 (they should be equal). Program size: distinct subterms of the Z3 expression after unrolling; source size: AST nodes. 'No passing program exists' counts failed attacks whose realizability query was sat.

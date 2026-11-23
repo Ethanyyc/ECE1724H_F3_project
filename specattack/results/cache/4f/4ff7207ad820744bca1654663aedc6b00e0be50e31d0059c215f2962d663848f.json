@@ -1,0 +1,23 @@
+{
+ "material": {
+  "model": "claude-haiku-5-5",
+  "prompt": "You wrote a formal specification of a function, as a precondition and a postcondition in Python with the Z3 library. It needs to be revised.\n\nTask: Return x minus the integer whose decimal digits are those of x in reverse order, with leading zeros dropped (for example, 2100 gives 2100 - 12 = 2088). You may assume 0 <= x <= 9999.\n\nInputs: x: integer\nThe function's result is called r (an integer).\n\nYour current specification:\n\n```python\ndef pre(x):\n    return And(x >= 0, x <= 9999)\n\ndef post(x, r):\n    # Digits of x (4-digit representation with leading zeros):\n    # d0 = x % 10 (units), d1 = (x // 10) % 10 (tens),\n    # d2 = (x // 100) % 10 (hundreds), d3 = x // 1000 (thousands).\n    # Reversed number (leading zeros dropped does not change the value):\n    # rev = d0*1000 + d1*100 + d2*10 + d3.\n    rev = ((x % 10) * 1000\n           + ((x // 10) % 10) * 100\n           + ((x // 100) % 10) * 10\n           + x // 1000)\n    return r == x - rev\n```\n\nFeedback:\nYour spec is wrong.\n\nWrite a corrected specification: pre(x) returns a Z3 Boolean formula that holds exactly for the inputs the function may be called with, and post(x, r) returns a Z3 Boolean formula that holds exactly when r is a correct result for those inputs.\n\nRules for the code (code that breaks them is rejected):\n- The Z3 functions And, Or, Not, Implies, If, ForAll, Exists, Sum, Int and Ints are already available; do not import anything.\n- A variable used in ForAll or Exists must be created first, for example k = Int('k'), and then used as ForAll([k], ...) or Exists([k], ...). The inputs and r are already Z3 variables (the function's parameters); do not create them again.\n- Every condition that depends on the inputs (or on r) must be a Z3 formula: combine conditions with And(...), Or(...), Not(...) and Implies(...), and use If(c, x, y) for a value that depends on a condition. Python's and, or, not, if, x if c else y, in, min, max, sorted, all and any do not work on Z3 formulas.\n- Everything else may be ordinary Python: local variables, lists (also with append), loops, comprehensions, helper functions, and if statements or conditions that only test loop indices and constants.\n- Integers are mathematical integers (no overflow). On formulas, / and // are integer division and % is the remainder, each with a positive integer constant as the divisor. Avoid multiplying two variables: Z3 may then be unable to check the code.\n- Write only function definitions at the top level; do not use try or global, do not redefine the Z3 functions or N, and do not give Z3 variables names that start with in_ or out_.\n\nReply with exactly one Python code block that defines pre and post.\n",
+  "max_tokens": 16000,
+  "thinking": "adaptive/medium",
+  "tag": "exp2:reverse_difference-r0:t1:k1"
+ },
+ "result": {
+  "text": "```python\ndef pre(x):\n    return And(x >= 0, x <= 9999)\n\ndef post(x, r):\n    # Digits of x as a 4-digit string with leading zeros:\n    # x = 1000*t + 100*h + 10*te + u, each digit in 0..9.\n    # Reversing the digit string gives the value 1000*u + 100*te + 10*h + t\n    # (leading zeros in the reversed string do not change its value).\n    t = Int('t')\n    h = Int('h')\n    te = Int('te')\n    u = Int('u')\n    digits_ok = And(t >= 0, t <= 9, h >= 0, h <= 9,\n                    te >= 0, te <= 9, u >= 0, u <= 9)\n    decomposition = And(x == 1000 * t + 100 * h + 10 * te + u)\n    rev = 1000 * u + 100 * te + 10 * h + t\n    return Exists([t, h, te, u],\n                  And(digits_ok, decomposition, r == x - rev))\n```",
+  "model": "claude-haiku-5-5",
+  "model_version": "claude-haiku-5-5",
+  "tokens_in": 997,
+  "tokens_out": 2192,
+  "tokens_thinking": 1853,
+  "cost_usd": 0.001196,
+  "latency_ms": 10050.6,
+  "stop_reason": "end_turn",
+  "thinking": "adaptive/medium",
+  "cache_hit": false,
+  "cache_key": "4ff7207ad820744bca1654663aedc6b00e0be50e31d0059c215f2962d663848f"
+ }
+}

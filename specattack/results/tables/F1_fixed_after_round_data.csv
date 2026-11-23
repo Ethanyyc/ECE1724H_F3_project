@@ -1,0 +1,13 @@
+Feedback type,Round,Fraction correct
+1: pass/fail,0,0.0
+1: pass/fail,1,0.6
+1: pass/fail,2,0.75
+1: pass/fail,3,0.85
+2: one example,0,0.0
+2: one example,1,0.95
+2: one example,2,0.95
+2: one example,3,0.95
+3: wrong program,0,0.0
+3: wrong program,1,0.95
+3: wrong program,2,0.95
+3: wrong program,3,0.95
